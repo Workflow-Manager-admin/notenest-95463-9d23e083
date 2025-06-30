@@ -3,24 +3,45 @@ import "./App.css";
 import AppHeader from "./components/AppHeader";
 import Sidebar from "./components/Sidebar";
 import MainContent from "./components/MainContent";
+import NoteCreateModal from "./components/NoteCreateModal";
 
 // PUBLIC_INTERFACE
 function App() {
   /**
-   * Main application wrapper.
-   * Renders the header, sidebar, and main content area.
-   * Implements theme toggle (light/dark) for demonstration, though default is minimal light.
+   * Main application wrapper for the notes app.
+   * Handles theme, note creation modal, and in-memory notes list.
    */
+
   const [theme, setTheme] = useState("light");
+  const [notes, setNotes] = useState([]); // [{id, title, body, created}]
+  const [showCreate, setShowCreate] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  const handleCreateNote = () => {
-    // Placeholder: eventually will open new note UI.
-    window.alert("TODO: Show create note dialog (placeholder)");
-  };
+  // PUBLIC_INTERFACE
+  function handleCreateNote() {
+    setShowCreate(true);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleNoteCreated({ title, body }) {
+    // Add note to top of list. ID is timestamp-based.
+    const newNote = {
+      id: "note-" + Date.now(),
+      title,
+      body,
+      created: new Date().toISOString()
+    };
+    setNotes([newNote, ...notes]);
+    setShowCreate(false);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleCloseCreateModal() {
+    setShowCreate(false);
+  }
 
   return (
     <div className="App" style={{minHeight: "100vh", background: "var(--bg-primary)"}}>
@@ -32,9 +53,16 @@ function App() {
       >
         {theme === "light" ? "🌙 Dark" : "☀️ Light"}
       </button>
+      {/* Note Creation Modal */}
+      <NoteCreateModal
+        open={showCreate}
+        onClose={handleCloseCreateModal}
+        onCreate={handleNoteCreated}
+      />
       <div style={{ display: "flex", flexDirection: "row", minHeight: "calc(100vh - 64px)" }}>
         <Sidebar onCreateNote={handleCreateNote} />
-        <MainContent />
+        {/* Pass notes as prop for future use */}
+        <MainContent notes={notes} />
       </div>
     </div>
   );
