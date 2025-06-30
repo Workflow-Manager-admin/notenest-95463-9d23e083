@@ -5,6 +5,71 @@ import Sidebar from "./components/Sidebar";
 import MainContent from "./components/MainContent";
 import NoteCreateModal from "./components/NoteCreateModal";
 
+/** Minimal confirm dialog for reuse */
+function ConfirmDialog({ open, title = "Are you sure?", message = "", onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div
+      tabIndex={-1}
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.18)",
+        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+      }}
+      onClick={onCancel}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div
+        style={{
+          background: "var(--bg-primary)",
+          color: "var(--text-primary)",
+          borderRadius: 12,
+          minWidth: 300,
+          maxWidth: 400,
+          padding: "1.5rem 2rem",
+          boxShadow: "0 6px 32px rgba(40,44,52,0.13)",
+          position: "relative"
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h3 style={{margin: 0, fontWeight: 600, fontSize: "1.07rem"}}>{title}</h3>
+        <p style={{margin: "1.1em 0 2.2em 0", color: "var(--text-secondary)"}}>{message}</p>
+        <div style={{display: "flex", gap: 12, justifyContent: "flex-end"}}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              background: "transparent",
+              color: "var(--text-secondary)",
+              border: "none",
+              fontWeight: 600,
+              letterSpacing: ".02em",
+              padding: "8px 16px",
+              borderRadius: 6,
+              cursor: "pointer"
+            }}
+          >Cancel</button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            style={{
+              background: "var(--button-bg, #d32f2f)",
+              color: "var(--button-text, #fff)",
+              border: "none",
+              fontWeight: 600,
+              padding: "8px 18px",
+              borderRadius: 6,
+              cursor: "pointer",
+              opacity: 1
+            }}
+          >Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // PUBLIC_INTERFACE
 function App() {
   /**
@@ -18,6 +83,9 @@ function App() {
   const [showEdit, setShowEdit] = useState(false);
   const [editNote, setEditNote] = useState(null); // {id, title, body, created}
 
+  // --- Deletion modal state ---
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
@@ -44,7 +112,6 @@ function App() {
   function handleCloseCreateModal() {
     setShowCreate(false);
   }
-
   // PUBLIC_INTERFACE
   function handleEditNote(note) {
     setEditNote(note);
@@ -71,6 +138,25 @@ function App() {
     setEditNote(null);
   }
 
+  // PUBLIC_INTERFACE
+  function handleDeleteNoteRequest(note) {
+    setNoteToDelete(note);
+    setShowDeleteConfirm(true);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleConfirmDelete() {
+    setNotes(notes => notes.filter(n => n.id !== noteToDelete.id));
+    setShowDeleteConfirm(false);
+    setNoteToDelete(null);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleCancelDelete() {
+    setShowDeleteConfirm(false);
+    setNoteToDelete(null);
+  }
+
   return (
     <div className="App" style={{minHeight: "100vh", background: "var(--bg-primary)"}}>
       <AppHeader />
@@ -95,10 +181,26 @@ function App() {
         editMode={true}
         initialData={editNote}
       />
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete this note?"
+        message={noteToDelete ? `Are you sure you want to delete "${noteToDelete.title}"? This cannot be undone.` : ""}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
       <div style={{ display: "flex", flexDirection: "row", minHeight: "calc(100vh - 64px)" }}>
-        <Sidebar onCreateNote={handleCreateNote} />
-        {/* Pass notes, and pass edit handler for editing notes */}
-        <MainContent notes={notes} onEditNote={handleEditNote} />
+        <Sidebar
+          onCreateNote={handleCreateNote}
+          notes={notes}
+          onDeleteNote={handleDeleteNoteRequest}
+        />
+        {/* Pass notes, and pass edit AND delete handler for notes */}
+        <MainContent
+          notes={notes}
+          onEditNote={handleEditNote}
+          onDeleteNote={handleDeleteNoteRequest}
+        />
       </div>
     </div>
   );

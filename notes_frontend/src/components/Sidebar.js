@@ -2,10 +2,10 @@ import React from "react";
 import "../App.css";
 
 // PUBLIC_INTERFACE
-function Sidebar({ onCreateNote }) {
+function Sidebar({ onCreateNote, notes = [], onDeleteNote }) {
   /**
    * Renders the sidebar navigation for the notes app.
-   * Includes navigation links and "New Note" button.
+   * Includes navigation links, "New Note" button, and an optional note list with delete options.
    */
   return (
     <aside
@@ -28,10 +28,56 @@ function Sidebar({ onCreateNote }) {
           padding: "24px 0",
           listStyle: "none",
         }}>
-          <li style={{padding: "0.75rem 2rem"}}>
+          <li style={{padding: "0.75rem 2rem", fontWeight: 600}}>
             <span role="img" aria-label="notes" style={{marginRight: 8}}>🗒️</span>
             All Notes
           </li>
+          {/* Optional: Show quick list of notes with delete buttons */}
+          {notes.length > 0 && (
+            <>
+              {notes.slice(0, 5).map(note => (
+                <li key={note.id} style={{
+                  padding: "0.25rem 2.1rem 0.25rem 2.3rem",
+                  fontSize: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}>
+                  <span style={{
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    maxWidth: 108
+                  }} title={note.title}>{note.title}</span>
+                  {onDeleteNote && (
+                    <button
+                      style={{
+                        background: "transparent",
+                        color: "#ff6961",
+                        border: "none",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        cursor: "pointer",
+                        borderRadius: 5,
+                        width: 26,
+                        height: 26,
+                        marginLeft: 6,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                      aria-label="Delete note"
+                      title="Delete"
+                      onClick={() => onDeleteNote(note)}
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </li>
+              ))}
+              <li style={{height: 1}}></li>
+            </>
+          )}
           <li style={{padding: "0.75rem 2rem", opacity: 0.7}}>
             <span role="img" aria-label="favorites" style={{marginRight: 8}}>⭐️</span>
             Favorites

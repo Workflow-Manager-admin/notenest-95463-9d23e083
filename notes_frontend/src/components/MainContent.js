@@ -3,9 +3,9 @@ import "../App.css";
 
 /**
  * MainContent lists notes, allowing viewing and triggering editing for any note.
- * Shows a placeholder if no notes, otherwise lists notes, each with an Edit button.
+ * Shows a placeholder if no notes, otherwise lists notes, each with Edit and Delete buttons.
  */
-function MainContent({ notes = [], onEditNote }) {
+function MainContent({ notes = [], onEditNote, onDeleteNote }) {
   return (
     <main
       style={{
@@ -33,21 +33,21 @@ function MainContent({ notes = [], onEditNote }) {
                 padding: "1.2rem 1.3rem",
                 marginBottom: 18,
                 border: "1px solid var(--border-color)",
-                position: "relative"
+                position: "relative",
+                minHeight: 60
               }}>
                 <div style={{fontSize: "1.1rem", fontWeight: 600, marginBottom: 6, color: "var(--text-primary)"}}>{note.title}</div>
                 <div style={{fontSize: 15, color: "var(--text-secondary)", marginBottom: 6, whiteSpace: "pre-line", textOverflow: "ellipsis", overflow: "hidden"}}>{note.body}</div>
                 <div style={{fontSize: 12, color: "var(--border-color)", marginTop: 4}}>
                   Created: {new Date(note.created).toLocaleString()}
                 </div>
-                {/* Edit button */}
                 {onEditNote &&
                   <button
                     onClick={() => onEditNote(note)}
                     style={{
                       position: "absolute",
                       top: 14,
-                      right: 18,
+                      right: 60,
                       background: "var(--button-bg, #1976d2)",
                       color: "var(--button-text, #fff)",
                       border: "none",
@@ -58,10 +58,39 @@ function MainContent({ notes = [], onEditNote }) {
                       cursor: "pointer",
                       opacity: 0.98,
                       transition: "background .18s",
+                      marginLeft: 8
                     }}
                     aria-label="Edit note"
                   >
                     Edit
+                  </button>
+                }
+                {onDeleteNote &&
+                  <button
+                    onClick={() => onDeleteNote(note)}
+                    style={{
+                      position: "absolute",
+                      top: 14,
+                      right: 14,
+                      background: "transparent",
+                      color: "#ff6961",
+                      border: "none",
+                      fontWeight: 700,
+                      fontSize: 18,
+                      cursor: "pointer",
+                      borderRadius: 6,
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0.85,
+                      transition: "color 0.18s"
+                    }}
+                    aria-label="Delete note"
+                    title="Delete"
+                  >
+                    🗑️
                   </button>
                 }
               </li>
