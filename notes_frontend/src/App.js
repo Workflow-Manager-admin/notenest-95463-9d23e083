@@ -78,13 +78,15 @@ function App() {
    */
 
   const [theme, setTheme] = useState("light");
-  const [notes, setNotes] = useState([]); // [{id, title, body, created}]
+  const [notes, setNotes] = useState([]); // [{id, title, body, created, isFavourite}]
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const [editNote, setEditNote] = useState(null); // {id, title, body, created}
+  const [editNote, setEditNote] = useState(null); // {id, title, body, created, isFavourite}
   // --- Search/filter state ---
   const [searchTerm, setSearchTerm] = useState("");
 
+  // --- Favourites/trash view state ---
+  const [activeSidebar, setActiveSidebar] = useState("all"); // "all", "favourites"
   // --- Deletion modal state ---
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
@@ -104,7 +106,8 @@ function App() {
       id: "note-" + Date.now(),
       title,
       body,
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
+      isFavourite: false
     };
     setNotes([newNote, ...notes]);
     setShowCreate(false);
@@ -122,7 +125,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   function handleNoteEdited({ title, body }) {
-    // Update the note in notes.
+    // Update the note in notes (preserving isFavourite).
     setNotes(notes =>
       notes.map(n =>
         n.id === editNote.id
@@ -138,6 +141,20 @@ function App() {
   function handleCloseEditModal() {
     setShowEdit(false);
     setEditNote(null);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleToggleFavourite(noteId) {
+    setNotes(notes =>
+      notes.map(n =>
+        n.id === noteId ? { ...n, isFavourite: !n.isFavourite } : n
+      )
+    );
+  }
+
+  // PUBLIC_INTERFACE
+  function handleSidebarSelect(key) {
+    setActiveSidebar(key);
   }
 
   // PUBLIC_INTERFACE
@@ -159,16 +176,21 @@ function App() {
     setNoteToDelete(null);
   }
 
-  // Filter notes according to search term (case-insensitive in title or body)
+  // Computed: filter notes according to sidebar state and search
+  let viewNotes = notes;
+  if (activeSidebar === "favourites") {
+    viewNotes = notes.filter(n => n.isFavourite);
+  }
+  // (Trash in future)
   const filteredNotes = (searchTerm || "").trim()
-    ? notes.filter(note => {
+    ? viewNotes.filter(note => {
         const v = searchTerm.toLowerCase();
         return (
           note.title.toLowerCase().includes(v) ||
           note.body.toLowerCase().includes(v)
         );
       })
-    : notes;
+    : viewNotes;
 
   return (
     <div className="App" style={{minHeight: "100vh", background: "var(--bg-primary)"}}>
@@ -209,12 +231,15 @@ function App() {
           onDeleteNote={handleDeleteNoteRequest}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          activeSidebar={activeSidebar}
+          onSelectSidebar={handleSidebarSelect}
         />
         {/* MainContent: filtered notes and search control */}
         <MainContent
           notes={filteredNotes}
           onEditNote={handleEditNote}
           onDeleteNote={handleDeleteNoteRequest}
+          onToggleFavourite={handleToggleFavourite}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
         />

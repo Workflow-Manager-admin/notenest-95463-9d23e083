@@ -9,10 +9,12 @@ import NoteSearchInput from "./NoteSearchInput";
  *   - notes (array): the currently-filtered notes
  *   - onEditNote (function): open edit modal
  *   - onDeleteNote (function): prompt for deletion
+ *   - onToggleFavourite (function): toggles favourite state for a note
  *   - searchTerm (string)
  *   - onSearchChange (function)
  */
-function MainContent({ notes = [], onEditNote, onDeleteNote, searchTerm, onSearchChange }) {
+// PUBLIC_INTERFACE
+function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, searchTerm, onSearchChange }) {
   return (
     <main
       style={{
@@ -46,7 +48,45 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, searchTerm, onSearc
                 position: "relative",
                 minHeight: 60
               }}>
-                <div style={{fontSize: "1.1rem", fontWeight: 600, marginBottom: 6, color: "var(--text-primary)"}}>{note.title}</div>
+                {/* FAVOURITE BUTTON */}
+                {onToggleFavourite &&
+                  <button
+                    onClick={() => onToggleFavourite(note.id)}
+                    style={{
+                      position: "absolute",
+                      top: 14,
+                      left: 12,
+                      background: "transparent",
+                      color: note.isFavourite ? "#ffb300" : "#aaa",
+                      border: "none",
+                      fontWeight: 700,
+                      fontSize: 21,
+                      cursor: "pointer",
+                      borderRadius: 6,
+                      width: 28,
+                      height: 28,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: note.isFavourite ? 1 : 0.7,
+                      transition: "color 0.15s"
+                    }}
+                    aria-label={note.isFavourite ? "Unfavourite" : "Mark as favourite"}
+                    title={note.isFavourite ? "Unfavourite" : "Mark as favourite"}
+                  >
+                    {note.isFavourite ? "★" : "☆"}
+                  </button>
+                }
+                <div style={{
+                  fontSize: "1.1rem",
+                  fontWeight: 600,
+                  marginBottom: 6,
+                  color: "var(--text-primary)",
+                  marginLeft: onToggleFavourite ? 36 : 0,
+                  minHeight: "1em"
+                }}>
+                  {note.title}
+                </div>
                 <div style={{fontSize: 15, color: "var(--text-secondary)", marginBottom: 6, whiteSpace: "pre-line", textOverflow: "ellipsis", overflow: "hidden"}}>{note.body}</div>
                 <div style={{fontSize: 12, color: "var(--border-color)", marginTop: 4}}>
                   Created: {new Date(note.created).toLocaleString()}

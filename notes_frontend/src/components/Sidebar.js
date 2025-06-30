@@ -3,7 +3,15 @@ import "../App.css";
 import NoteSearchInput from "./NoteSearchInput";
 
 // PUBLIC_INTERFACE
-function Sidebar({ onCreateNote, notes = [], onDeleteNote, searchTerm, onSearchChange }) {
+function Sidebar({
+  onCreateNote,
+  notes = [],
+  onDeleteNote,
+  searchTerm,
+  onSearchChange,
+  activeSidebar = "all", // "all", "favourites"
+  onSelectSidebar // (key)=>void
+}) {
   /**
    * Renders the sidebar navigation for the notes app.
    * Includes navigation links, search input, "New Note" button, and filtered note list with delete options.
@@ -32,7 +40,18 @@ function Sidebar({ onCreateNote, notes = [], onDeleteNote, searchTerm, onSearchC
           padding: "0 0 24px 0",
           listStyle: "none",
         }}>
-          <li style={{padding: "0.75rem 2rem", fontWeight: 600}}>
+          <li
+            style={{
+              padding: "0.75rem 2rem",
+              fontWeight: 600,
+              background: activeSidebar === "all" ? "var(--bg-primary)" : "none",
+              borderRadius: 7,
+              cursor: "pointer"
+            }}
+            onClick={() => onSelectSidebar && onSelectSidebar("all")}
+            aria-current={activeSidebar === "all" ? "page" : undefined}
+            tabIndex={0}
+          >
             <span role="img" aria-label="notes" style={{marginRight: 8}}>🗒️</span>
             All Notes
           </li>
@@ -82,9 +101,22 @@ function Sidebar({ onCreateNote, notes = [], onDeleteNote, searchTerm, onSearchC
               <li style={{height: 1}}></li>
             </>
           )}
-          <li style={{padding: "0.75rem 2rem", opacity: 0.7}}>
+          <li
+            style={{
+              padding: "0.75rem 2rem",
+              fontWeight: 600,
+              background: activeSidebar === "favourites" ? "var(--bg-primary)" : "none",
+              borderRadius: 7,
+              opacity: 1,
+              color: activeSidebar === "favourites" ? "#ffb300" : "inherit",
+              cursor: "pointer"
+            }}
+            onClick={() => onSelectSidebar && onSelectSidebar("favourites")}
+            aria-current={activeSidebar === "favourites" ? "page" : undefined}
+            tabIndex={0}
+          >
             <span role="img" aria-label="favorites" style={{marginRight: 8}}>⭐️</span>
-            Favorites
+            Favourites
           </li>
           <li style={{padding: "0.75rem 2rem", opacity: 0.7}}>
             <span role="img" aria-label="trash" style={{marginRight: 8}}>🗑️</span>
