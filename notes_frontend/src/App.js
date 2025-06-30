@@ -82,6 +82,8 @@ function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editNote, setEditNote] = useState(null); // {id, title, body, created}
+  // --- Search/filter state ---
+  const [searchTerm, setSearchTerm] = useState("");
 
   // --- Deletion modal state ---
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -157,6 +159,17 @@ function App() {
     setNoteToDelete(null);
   }
 
+  // Filter notes according to search term (case-insensitive in title or body)
+  const filteredNotes = (searchTerm || "").trim()
+    ? notes.filter(note => {
+        const v = searchTerm.toLowerCase();
+        return (
+          note.title.toLowerCase().includes(v) ||
+          note.body.toLowerCase().includes(v)
+        );
+      })
+    : notes;
+
   return (
     <div className="App" style={{minHeight: "100vh", background: "var(--bg-primary)"}}>
       <AppHeader />
@@ -192,14 +205,18 @@ function App() {
       <div style={{ display: "flex", flexDirection: "row", minHeight: "calc(100vh - 64px)" }}>
         <Sidebar
           onCreateNote={handleCreateNote}
-          notes={notes}
+          notes={filteredNotes}
           onDeleteNote={handleDeleteNoteRequest}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
         />
-        {/* Pass notes, and pass edit AND delete handler for notes */}
+        {/* MainContent: filtered notes and search control */}
         <MainContent
-          notes={notes}
+          notes={filteredNotes}
           onEditNote={handleEditNote}
           onDeleteNote={handleDeleteNoteRequest}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
         />
       </div>
     </div>

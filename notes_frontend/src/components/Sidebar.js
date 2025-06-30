@@ -1,11 +1,12 @@
 import React from "react";
 import "../App.css";
+import NoteSearchInput from "./NoteSearchInput";
 
 // PUBLIC_INTERFACE
-function Sidebar({ onCreateNote, notes = [], onDeleteNote }) {
+function Sidebar({ onCreateNote, notes = [], onDeleteNote, searchTerm, onSearchChange }) {
   /**
    * Renders the sidebar navigation for the notes app.
-   * Includes navigation links, "New Note" button, and an optional note list with delete options.
+   * Includes navigation links, search input, "New Note" button, and filtered note list with delete options.
    */
   return (
     <aside
@@ -23,16 +24,19 @@ function Sidebar({ onCreateNote, notes = [], onDeleteNote }) {
       }}
     >
       <nav style={{flex: 1}}>
+        <div style={{marginTop: 7, marginBottom: 4}}>
+          <NoteSearchInput searchTerm={searchTerm} onChange={onSearchChange} />
+        </div>
         <ul style={{
           margin: 0,
-          padding: "24px 0",
+          padding: "0 0 24px 0",
           listStyle: "none",
         }}>
           <li style={{padding: "0.75rem 2rem", fontWeight: 600}}>
             <span role="img" aria-label="notes" style={{marginRight: 8}}>🗒️</span>
             All Notes
           </li>
-          {/* Optional: Show quick list of notes with delete buttons */}
+          {/* Show quick list of filtered notes (first 5) */}
           {notes.length > 0 && (
             <>
               {notes.slice(0, 5).map(note => (

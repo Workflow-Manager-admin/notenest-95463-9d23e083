@@ -1,11 +1,18 @@
 import React from "react";
 import "../App.css";
+import NoteSearchInput from "./NoteSearchInput";
 
 /**
  * MainContent lists notes, allowing viewing and triggering editing for any note.
  * Shows a placeholder if no notes, otherwise lists notes, each with Edit and Delete buttons.
+ * Props:
+ *   - notes (array): the currently-filtered notes
+ *   - onEditNote (function): open edit modal
+ *   - onDeleteNote (function): prompt for deletion
+ *   - searchTerm (string)
+ *   - onSearchChange (function)
  */
-function MainContent({ notes = [], onEditNote, onDeleteNote }) {
+function MainContent({ notes = [], onEditNote, onDeleteNote, searchTerm, onSearchChange }) {
   return (
     <main
       style={{
@@ -17,10 +24,13 @@ function MainContent({ notes = [], onEditNote, onDeleteNote }) {
         background: "var(--bg-primary)"
       }}
     >
+      <div style={{ width: "100%", maxWidth: 660, marginBottom: 5 }}>
+        <NoteSearchInput searchTerm={searchTerm} onChange={onSearchChange} />
+      </div>
       {notes.length === 0 ? (
         <div style={{marginTop: "30vh", textAlign: "center", color: "var(--text-secondary)"}}>
-          <h2 style={{color: "var(--text-primary)", fontWeight: 500, margin: 0}}>Select or create a note</h2>
-          <p style={{margin: ".5rem 0 0 0"}}>Your notes will appear here.</p>
+          <h2 style={{color: "var(--text-primary)", fontWeight: 500, margin: 0}}>No notes found</h2>
+          <p style={{margin: ".5rem 0 0 0"}}>Try adjusting your search or create a new note.</p>
         </div>
       ) : (
         <section style={{maxWidth: 660, width: "100%"}}>
