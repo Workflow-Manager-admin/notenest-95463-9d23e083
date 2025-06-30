@@ -1,12 +1,11 @@
 import React from "react";
 import "../App.css";
 
-// PUBLIC_INTERFACE
-function MainContent({ notes = [] }) {
-  /**
-   * Primary content area for viewing and editing notes.
-   * Shows a placeholder if no notes, otherwise starts to list notes.
-   */
+/**
+ * MainContent lists notes, allowing viewing and triggering editing for any note.
+ * Shows a placeholder if no notes, otherwise lists notes, each with an Edit button.
+ */
+function MainContent({ notes = [], onEditNote }) {
   return (
     <main
       style={{
@@ -33,13 +32,38 @@ function MainContent({ notes = [] }) {
                 borderRadius: 8,
                 padding: "1.2rem 1.3rem",
                 marginBottom: 18,
-                border: "1px solid var(--border-color)"
+                border: "1px solid var(--border-color)",
+                position: "relative"
               }}>
                 <div style={{fontSize: "1.1rem", fontWeight: 600, marginBottom: 6, color: "var(--text-primary)"}}>{note.title}</div>
                 <div style={{fontSize: 15, color: "var(--text-secondary)", marginBottom: 6, whiteSpace: "pre-line", textOverflow: "ellipsis", overflow: "hidden"}}>{note.body}</div>
                 <div style={{fontSize: 12, color: "var(--border-color)", marginTop: 4}}>
                   Created: {new Date(note.created).toLocaleString()}
                 </div>
+                {/* Edit button */}
+                {onEditNote &&
+                  <button
+                    onClick={() => onEditNote(note)}
+                    style={{
+                      position: "absolute",
+                      top: 14,
+                      right: 18,
+                      background: "var(--button-bg, #1976d2)",
+                      color: "var(--button-text, #fff)",
+                      border: "none",
+                      padding: "6px 14px",
+                      borderRadius: 6,
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: "pointer",
+                      opacity: 0.98,
+                      transition: "background .18s",
+                    }}
+                    aria-label="Edit note"
+                  >
+                    Edit
+                  </button>
+                }
               </li>
             ))}
           </ul>

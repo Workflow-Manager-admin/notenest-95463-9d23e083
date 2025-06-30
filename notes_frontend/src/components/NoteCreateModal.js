@@ -1,17 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 /**
- * Minimal modal/dialog for creating a new note.
+ * Minimal modal/dialog for creating or editing a note.
  * Props:
  *  - open (bool): whether modal is visible
  *  - onClose(): closes modal
- *  - onCreate({title, body}): called with validated note data
+ *  - onCreate({title, body}): called with validated note data (used for both create/edit)
+ *  - initialData: {title, body, ...} optional. If present, pre-fills and enables edit mode UI
+ *  - editMode: bool, if true, shows 'Edit Note' header and 'Save' button
  */
-function NoteCreateModal({ open, onClose, onCreate }) {
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+function NoteCreateModal({ open, onClose, onCreate, initialData = null, editMode = false }) {
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [body, setBody] = useState(initialData?.body || "");
   const [errors, setErrors] = useState({});
+
+  // Refill fields on open or mode/data change
+  useEffect(() => {
+    if (open) {
+      setTitle(initialData?.title || "");
+      setBody(initialData?.body || "");
+      setErrors({});
+    }
+  }, [initialData, open]);
 
   if (!open) return null;
 
@@ -24,9 +35,12 @@ function NoteCreateModal({ open, onClose, onCreate }) {
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
       onCreate({ title: title.trim(), body: body.trim() });
-      setTitle("");
-      setBody("");
-      setErrors({});
+      // Reset only for create; editing is managed by parent
+      if (!editMode) {
+        setTitle("");
+        setBody("");
+        setErrors({});
+      }
     }
   }
 
@@ -66,7 +80,9 @@ function NoteCreateModal({ open, onClose, onCreate }) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        <h3 style={{margin: 0, fontWeight: 600, fontSize: "1.1rem"}}>New Note</h3>
+        <h3 style={{margin: 0, fontWeight: 600, fontSize: "1.1rem"}}>
+          {editMode ? "Edit Note" : "New Note"}
+        </h3>
         <form style={{marginTop: 18, display: "flex", flexDirection: "column", gap: 18}} onSubmit={handleSubmit}>
           <div>
             <label htmlFor="note-title" style={{display: "block", marginBottom: 6, fontWeight: 500}}>Title</label>
@@ -143,7 +159,7 @@ function NoteCreateModal({ open, onClose, onCreate }) {
               }}
               disabled={!title.trim() || !body.trim()}
             >
-              Create
+              {editMode ? "Save" : "Create"}
             </button>
           </div>
         </form>

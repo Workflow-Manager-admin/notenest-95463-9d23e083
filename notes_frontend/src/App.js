@@ -9,12 +9,14 @@ import NoteCreateModal from "./components/NoteCreateModal";
 function App() {
   /**
    * Main application wrapper for the notes app.
-   * Handles theme, note creation modal, and in-memory notes list.
+   * Handles theme, note creation modal, editing notes, and in-memory notes list.
    */
 
   const [theme, setTheme] = useState("light");
   const [notes, setNotes] = useState([]); // [{id, title, body, created}]
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editNote, setEditNote] = useState(null); // {id, title, body, created}
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -43,6 +45,32 @@ function App() {
     setShowCreate(false);
   }
 
+  // PUBLIC_INTERFACE
+  function handleEditNote(note) {
+    setEditNote(note);
+    setShowEdit(true);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleNoteEdited({ title, body }) {
+    // Update the note in notes.
+    setNotes(notes =>
+      notes.map(n =>
+        n.id === editNote.id
+          ? { ...n, title, body }
+          : n
+      )
+    );
+    setShowEdit(false);
+    setEditNote(null);
+  }
+
+  // PUBLIC_INTERFACE
+  function handleCloseEditModal() {
+    setShowEdit(false);
+    setEditNote(null);
+  }
+
   return (
     <div className="App" style={{minHeight: "100vh", background: "var(--bg-primary)"}}>
       <AppHeader />
@@ -59,10 +87,18 @@ function App() {
         onClose={handleCloseCreateModal}
         onCreate={handleNoteCreated}
       />
+      {/* Note Edit Modal (reuse NoteCreateModal, but prefill data and edit logic) */}
+      <NoteCreateModal
+        open={showEdit}
+        onClose={handleCloseEditModal}
+        onCreate={handleNoteEdited}
+        editMode={true}
+        initialData={editNote}
+      />
       <div style={{ display: "flex", flexDirection: "row", minHeight: "calc(100vh - 64px)" }}>
         <Sidebar onCreateNote={handleCreateNote} />
-        {/* Pass notes as prop for future use */}
-        <MainContent notes={notes} />
+        {/* Pass notes, and pass edit handler for editing notes */}
+        <MainContent notes={notes} onEditNote={handleEditNote} />
       </div>
     </div>
   );
