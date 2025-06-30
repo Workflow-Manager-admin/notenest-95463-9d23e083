@@ -55,49 +55,52 @@ function Sidebar({
             <span role="img" aria-label="notes" style={{marginRight: 8}}>🗒️</span>
             All Notes
           </li>
-          {/* Show quick list of filtered notes (first 5) */}
+          {/* Show quick list of filtered notes (first 5, NOT trashed) */}
           {notes.length > 0 && (
             <>
-              {notes.slice(0, 5).map(note => (
-                <li key={note.id} style={{
-                  padding: "0.25rem 2.1rem 0.25rem 2.3rem",
-                  fontSize: 14,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between"
-                }}>
-                  <span style={{
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    maxWidth: 108
-                  }} title={note.title}>{note.title}</span>
-                  {onDeleteNote && (
-                    <button
-                      style={{
-                        background: "transparent",
-                        color: "#ff6961",
-                        border: "none",
-                        fontWeight: 700,
-                        fontSize: 15,
-                        cursor: "pointer",
-                        borderRadius: 5,
-                        width: 26,
-                        height: 26,
-                        marginLeft: 6,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}
-                      aria-label="Delete note"
-                      title="Delete"
-                      onClick={() => onDeleteNote(note)}
-                    >
-                      🗑️
-                    </button>
-                  )}
-                </li>
-              ))}
+              {notes
+                .filter(note => !note.trashed)
+                .slice(0, 5)
+                .map(note => (
+                  <li key={note.id} style={{
+                    padding: "0.25rem 2.1rem 0.25rem 2.3rem",
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}>
+                    <span style={{
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                      maxWidth: 108
+                    }} title={note.title}>{note.title}</span>
+                    {onDeleteNote && (
+                      <button
+                        style={{
+                          background: "transparent",
+                          color: "#ff6961",
+                          border: "none",
+                          fontWeight: 700,
+                          fontSize: 15,
+                          cursor: "pointer",
+                          borderRadius: 5,
+                          width: 26,
+                          height: 26,
+                          marginLeft: 6,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                        aria-label="Delete note"
+                        title="Delete"
+                        onClick={() => onDeleteNote(note)}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </li>
+                ))}
               <li style={{height: 1}}></li>
             </>
           )}
@@ -118,7 +121,20 @@ function Sidebar({
             <span role="img" aria-label="favorites" style={{marginRight: 8}}>⭐️</span>
             Favourites
           </li>
-          <li style={{padding: "0.75rem 2rem", opacity: 0.7}}>
+          <li
+            style={{
+              padding: "0.75rem 2rem",
+              fontWeight: 600,
+              background: activeSidebar === "trash" ? "var(--bg-primary)" : "none",
+              borderRadius: 7,
+              opacity: activeSidebar === "trash" ? 1 : 0.85,
+              color: activeSidebar === "trash" ? "#ff6961" : "inherit",
+              cursor: "pointer"
+            }}
+            onClick={() => onSelectSidebar && onSelectSidebar("trash")}
+            aria-current={activeSidebar === "trash" ? "page" : undefined}
+            tabIndex={0}
+          >
             <span role="img" aria-label="trash" style={{marginRight: 8}}>🗑️</span>
             Trash
           </li>

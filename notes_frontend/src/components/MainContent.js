@@ -7,14 +7,25 @@ import NoteSearchInput from "./NoteSearchInput";
  * Shows a placeholder if no notes, otherwise lists notes, each with Edit and Delete buttons.
  * Props:
  *   - notes (array): the currently-filtered notes
- *   - onEditNote (function): open edit modal
- *   - onDeleteNote (function): prompt for deletion
- *   - onToggleFavourite (function): toggles favourite state for a note
+ *   - onEditNote (function): open edit modal (not used in Trash mode)
+ *   - onDeleteNote (function): prompt for deletion; in Trash mode triggers permadelete
+ *   - onToggleFavourite (function): toggles favourite state for a note (not in Trash mode)
+ *   - trashMode (bool): if true, render trash-specific actions
+ *   - onRestoreNote (function): restore trashed note (Trash only)
  *   - searchTerm (string)
  *   - onSearchChange (function)
  */
 // PUBLIC_INTERFACE
-function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, searchTerm, onSearchChange }) {
+function MainContent({
+  notes = [],
+  onEditNote,
+  onDeleteNote,
+  onToggleFavourite,
+  searchTerm,
+  onSearchChange,
+  trashMode = false,
+  onRestoreNote
+}) {
   return (
     <main
       style={{
@@ -36,7 +47,9 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
         </div>
       ) : (
         <section style={{maxWidth: 660, width: "100%"}}>
-          <h2 style={{color: "var(--text-primary)", fontWeight: 500}}>Your Notes</h2>
+          <h2 style={{color: "var(--text-primary)", fontWeight: 500}}>
+            {trashMode ? "Trash" : "Your Notes"}
+          </h2>
           <ul style={{padding: 0, margin: "1.5rem 0 0 0", listStyle: "none"}}>
             {notes.map(note => (
               <li key={note.id} style={{
@@ -46,10 +59,11 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                 marginBottom: 18,
                 border: "1px solid var(--border-color)",
                 position: "relative",
-                minHeight: 60
+                minHeight: 60,
+                opacity: trashMode ? 0.78 : 1
               }}>
                 {/* FAVOURITE BUTTON */}
-                {onToggleFavourite &&
+                {onToggleFavourite && !trashMode &&
                   <button
                     onClick={() => onToggleFavourite(note.id)}
                     style={{
@@ -82,7 +96,7 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                   fontWeight: 600,
                   marginBottom: 6,
                   color: "var(--text-primary)",
-                  marginLeft: onToggleFavourite ? 36 : 0,
+                  marginLeft: onToggleFavourite && !trashMode ? 36 : 0,
                   minHeight: "1em"
                 }}>
                   {note.title}
@@ -91,7 +105,8 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                 <div style={{fontSize: 12, color: "var(--border-color)", marginTop: 4}}>
                   Created: {new Date(note.created).toLocaleString()}
                 </div>
-                {onEditNote &&
+                {/* If not Trash: Edit button */}
+                {onEditNote && !trashMode &&
                   <button
                     onClick={() => onEditNote(note)}
                     style={{
@@ -115,6 +130,33 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                     Edit
                   </button>
                 }
+                {/* Main Trash buttons: Restore (left), and Permadelete (right) */}
+                {trashMode &&
+                  <>
+                    <button
+                      onClick={() => onRestoreNote && onRestoreNote(note)}
+                      style={{
+                        position: "absolute",
+                        top: 14,
+                        left: 12,
+                        background: "var(--button-bg, #388e3c)",
+                        color: "var(--button-text, #fff)",
+                        border: "none",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        borderRadius: 6,
+                        padding: "7px 13px",
+                        cursor: "pointer",
+                        opacity: 1
+                      }}
+                      aria-label="Restore"
+                      title="Restore"
+                    >
+                      Restore
+                    </button>
+                  </>
+                }
+                {/* Delete (all views): In trash, this means permanent delete. Else, soft delete */}
                 {onDeleteNote &&
                   <button
                     onClick={() => onDeleteNote(note)}
@@ -122,11 +164,11 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                       position: "absolute",
                       top: 14,
                       right: 14,
-                      background: "transparent",
+                      background: trashMode ? "#fff7f8" : "transparent",
                       color: "#ff6961",
                       border: "none",
                       fontWeight: 700,
-                      fontSize: 18,
+                      fontSize: trashMode ? 14 : 18,
                       cursor: "pointer",
                       borderRadius: 6,
                       width: 32,
@@ -134,13 +176,13 @@ function MainContent({ notes = [], onEditNote, onDeleteNote, onToggleFavourite, 
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      opacity: 0.85,
+                      opacity: 0.87,
                       transition: "color 0.18s"
                     }}
-                    aria-label="Delete note"
-                    title="Delete"
+                    aria-label={trashMode ? "Permanently delete note" : "Delete note"}
+                    title={trashMode ? "Permanently delete" : "Delete"}
                   >
-                    🗑️
+                    {trashMode ? "Delete Forever" : "🗑️"}
                   </button>
                 }
               </li>

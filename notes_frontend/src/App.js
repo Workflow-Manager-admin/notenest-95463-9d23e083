@@ -78,7 +78,8 @@ function App() {
    */
 
   const [theme, setTheme] = useState("light");
-  const [notes, setNotes] = useState([]); // [{id, title, body, created, isFavourite}]
+  // Notes structure: [{id, title, body, created, isFavourite, trashed}]
+  const [notes, setNotes] = useState([]); // [{id, title, body, created, isFavourite, trashed}]
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editNote, setEditNote] = useState(null); // {id, title, body, created, isFavourite}
@@ -86,7 +87,11 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // --- Favourites/trash view state ---
-  const [activeSidebar, setActiveSidebar] = useState("all"); // "all", "favourites"
+  const [activeSidebar, setActiveSidebar] = useState("all"); // "all", "favourites", "trash"
+
+  // --- Trash permanent delete and restore modal state ---
+  const [trashActionNote, setTrashActionNote] = useState(null);
+  const [trashActionType, setTrashActionType] = useState(null); // "restore" | "delete"
   // --- Deletion modal state ---
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
@@ -107,7 +112,8 @@ function App() {
       title,
       body,
       created: new Date().toISOString(),
-      isFavourite: false
+      isFavourite: false,
+      trashed: false
     };
     setNotes([newNote, ...notes]);
     setShowCreate(false);
@@ -125,7 +131,7 @@ function App() {
 
   // PUBLIC_INTERFACE
   function handleNoteEdited({ title, body }) {
-    // Update the note in notes (preserving isFavourite).
+    // Update the note in notes (preserving isFavourite, trashed).
     setNotes(notes =>
       notes.map(n =>
         n.id === editNote.id
@@ -159,13 +165,26 @@ function App() {
 
   // PUBLIC_INTERFACE
   function handleDeleteNoteRequest(note) {
-    setNoteToDelete(note);
-    setShowDeleteConfirm(true);
+    // In "Trash" view, triggers permanent delete confirm; elsewhere, soft delete
+    if (activeSidebar === "trash" || note.trashed) {
+      setTrashActionNote(note);
+      setTrashActionType("delete");
+    } else {
+      setNoteToDelete(note);
+      setShowDeleteConfirm(true);
+    }
   }
 
   // PUBLIC_INTERFACE
   function handleConfirmDelete() {
-    setNotes(notes => notes.filter(n => n.id !== noteToDelete.id));
+    // Soft delete: mark as trashed rather than removing from state.
+    setNotes(notes =>
+      notes.map(n =>
+        n.id === noteToDelete.id
+          ? { ...n, trashed: true }
+          : n
+      )
+    );
     setShowDeleteConfirm(false);
     setNoteToDelete(null);
   }
@@ -176,12 +195,40 @@ function App() {
     setNoteToDelete(null);
   }
 
-  // Computed: filter notes according to sidebar state and search
+  // For Trash view: permanently wipe a trashed note
+  function handlePermanentDeleteNote() {
+    setNotes(notes => notes.filter(n => n.id !== trashActionNote.id));
+    setTrashActionNote(null);
+    setTrashActionType(null);
+  }
+
+  // For Trash view: restore a trashed note to active
+  function handleRestoreNote() {
+    setNotes(notes =>
+      notes.map(n =>
+        n.id === trashActionNote.id
+          ? { ...n, trashed: false }
+          : n
+      )
+    );
+    setTrashActionNote(null);
+    setTrashActionType(null);
+  }
+
+  function handleCancelTrashAction() {
+    setTrashActionNote(null);
+    setTrashActionType(null);
+  }
+
+  // Computed: filter notes according to sidebar state and search/trash/favourites
   let viewNotes = notes;
   if (activeSidebar === "favourites") {
-    viewNotes = notes.filter(n => n.isFavourite);
+    viewNotes = notes.filter(n => n.isFavourite && !n.trashed);
+  } else if (activeSidebar === "trash") {
+    viewNotes = notes.filter(n => n.trashed);
+  } else {
+    viewNotes = notes.filter(n => !n.trashed);
   }
-  // (Trash in future)
   const filteredNotes = (searchTerm || "").trim()
     ? viewNotes.filter(note => {
         const v = searchTerm.toLowerCase();
@@ -227,23 +274,59 @@ function App() {
       <div style={{ display: "flex", flexDirection: "row", minHeight: "calc(100vh - 64px)" }}>
         <Sidebar
           onCreateNote={handleCreateNote}
-          notes={filteredNotes}
+          notes={
+            activeSidebar === "trash"
+              ? notes.filter(n => n.trashed)
+              : notes.filter(n => !n.trashed)
+          }
           onDeleteNote={handleDeleteNoteRequest}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           activeSidebar={activeSidebar}
           onSelectSidebar={handleSidebarSelect}
         />
-        {/* MainContent: filtered notes and search control */}
+        {/* MainContent changes for Trash: show restore/permanent delete, no "edit"/"favourite" for trash */}
         <MainContent
           notes={filteredNotes}
-          onEditNote={handleEditNote}
+          onEditNote={
+            activeSidebar !== "trash" ? handleEditNote : undefined
+          }
           onDeleteNote={handleDeleteNoteRequest}
-          onToggleFavourite={handleToggleFavourite}
+          onToggleFavourite={
+            activeSidebar === "trash" ? undefined : handleToggleFavourite
+          }
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          trashMode={activeSidebar === "trash"}
+          onRestoreNote={note => {
+            setTrashActionNote(note);
+            setTrashActionType("restore");
+          }}
         />
       </div>
+      {/* Trash-specific: Restore/Permanent Delete confirm dialog */}
+      <ConfirmDialog
+        open={!!trashActionNote && trashActionType === "delete"}
+        title="Permanently delete this note?"
+        message={
+          trashActionNote
+            ? `Are you sure you want to permanently delete "${trashActionNote.title}"? This cannot be undone.`
+            : ""
+        }
+        onConfirm={handlePermanentDeleteNote}
+        onCancel={handleCancelTrashAction}
+      />
+      <ConfirmDialog
+        open={!!trashActionNote && trashActionType === "restore"}
+        title="Restore this note?"
+        message={
+          trashActionNote
+            ? `Restore "${trashActionNote.title}" to Notes? It will be moved from Trash.`
+            : ""
+        }
+        onConfirm={handleRestoreNote}
+        onCancel={handleCancelTrashAction}
+      />
     </div>
   );
 }
